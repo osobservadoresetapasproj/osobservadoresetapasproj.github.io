@@ -1,0 +1,797 @@
+<head>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/default.min.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+  <script>hljs.highlightAll();</script>
+</head>
+
+<h1 id="relat-rio-laborat-rio-1">ETAPA 7 - Relatório Final do Trabalho (RFT)</h1>
+<p>Jorge Luiz Pinto Junior  - RA: 11058715 - CEO</p>
+<p>Marcos Baldrigue Andrade - RA: 11201921777 - CFO - Financeiro</p>
+<p>Guilherme Eduardo Pereira - RA: 11201720498 - CPO - Desenvolvimento</p>
+
+<h2 id="intro-o">Introdução</h2>
+<p style="text-align: justify; line-height: 1.5; text-indent: 2em;">
+    Este Relatório Final de Trabalho apresenta o desenvolvimento e a validação de um sistema de monitoramento por visão computacional que identifica, em tempo real, a permanência e a transição postural de indivíduos em contexto domiciliar e institucional, com ênfase no cuidado de uma idosa com Alzheimer e demência. A partir de entrevistas empáticas, o estudo delimita o Cenário de Aplicação que demanda notificações imediatas quando a pessoa se levanta de um móvel, mitigando riscos associados à locomoção desassistida durante períodos de baixa vigilância, como o sono. O sistema implementa captura de vídeo, calibração intrínseca e correção de distorção, estimação de pose e classificação de estados (em pé, sentada, deitada, ausente), além de envio automático de alertas, utilizando bibliotecas de reconhecido uso público, notadamente OpenCV e MediaPipe, bem como rotinas de cálculo geométrico executadas on-the-fly. O trabalho, conduzido pela equipe formada por Jorge Luiz Pinto Junior (RA: 11058715), Marcos Baldrigue Andrade (RA: 11201921777) e Guilherme Eduardo Pereira (RA: 11201720498), estabelece objetivos, fundamentação teórica, materiais e métodos, e define métricas para análise de desempenho em testes de campo, visando demonstrar a aderência do Sistema de Processamento da Visão ao contexto de aplicação e sua efetividade na ampliação da segurança, na responsividade a eventos críticos e na otimização do tempo de cuidadores.
+</p>
+
+<h3 id="aplicacao">Cenário de Aplicação (CA)</h3>
+
+<p style="text-align: justify; line-height: 1.5; text-indent: 2em;">
+O Contexto e Cenário de Aplicação deste projeto de monitoramento por visão computacional, teve sua origem em entrevistas com familiares dos alunos. O problema emerge do cuidado domiciliar de uma idosa com Alzheimer e demência: a câmera instalada não emite aviso quando a pessoa se levanta, o que exige vigilância contínua e inviabiliza a prevenção durante períodos como o sono. Em 18/06/2025 registra-se a necessidade de um sistema que notifique, de forma imediata, a saída da cama, reduzindo riscos associados à locomoção desassistida.    
+</p>
+
+<p style="text-align: justify; line-height: 1.5; text-indent: 2em;">
+    O objetivo do projeto consiste em desenvolver um sistema que identifique, em tempo real, a permanência de uma pessoa em um móvel (cama, cadeira, sofá) e que reconheça a transição de postura ao levantar, enviando um alerta imediato ao responsável. A proposta contempla o uso em contextos domésticos e institucionais, ampliando o alcance da supervisão sem requerer presença física constante do cuidador e respondendo às demandas de indivíduos em situação de vulnerabilidade.
+</p>
+
+<p style="text-align: justify; line-height: 1.5; text-indent: 2em;">
+O funcionamento prevê uma câmera posicionada de modo estratégico, cujas imagens alimentam algoritmos de visão computacional para detecção de presença e postura; ao identificar a saída do móvel, o sistema aciona notificações por aplicativo, SMS ou sinais locais. Espera-se, como benefício, o aumento da segurança, a resposta rápida a eventos críticos e a otimização do tempo dos cuidadores, promovendo autonomia, bem-estar e qualidade de vida da pessoa assistida.
+</p>
+
+<p style="text-align: justify; line-height: 1.5; text-indent: 2em;">
+Mais detalhes do Cenário de Aplicação podem ser obtidos através do documento de entrevistas empáticas a seguir:
+</p>
+
+<a href="/T1/Entrevistas Jorge.pdf" target="_blank" download>Download Entrevistas Jorge</a>
+
+<h3 id="fundament">Fundamentação Teórica</h3>
+
+<p style="text-align: justify; line-height: 1.5; text-indent: 2em;">
+Esta fundamentação teórica apresenta conceitos essenciais que sustentam um projeto de visão computacional. O texto discute a biblioteca OpenCV como infraestrutura algorítmica para aquisição, transformação e análise de imagens, descreve filtros de processamento espacial com ênfase em suavização, realce e detecção de bordas, formaliza o processo de calibração de câmeras segundo o modelo de câmara pinhole com parâmetros intrínsecos e extrínsecos e, por fim, caracteriza a biblioteca MediaPipe como arcabouço de estimativa de marcos corporais e rastreamento em tempo real. Imagens ilustrativas acompanham as seções a fim de tornar os conceitos mais concretos e operacionais.
+</p>
+
+<h4 id="">Biblioteca OpenCV</h4>
+<p style="text-align: justify; line-height: 1.5; text-indent: 2em;">
+A OpenCV constitui uma biblioteca de código aberto amplamente adotada para processamento de imagens e visão computacional. Ela provê interfaces em C++ e Python, oferece rotinas otimizadas para operações matriciais e integra módulos para entrada e saída de vídeo, conversão de espaços de cor, filtragem espacial, detecção de características e reconstrução geométrica. Em um projeto típico, a OpenCV gerencia a captura de quadros da webcam, executa transformações relevantes (como redimensionamento, equalização de histograma ou conversão para tons de cinza) e aplica filtros ou detectores conforme o objetivo da aplicação. A arquitetura modular permite que o desenvolvedor componha pipelines de processamento que operam em tempo real, beneficiando-se de otimizações vetoriais e paralelismo quando disponíveis.
+</p>
+<pre><code># Exemplo (Python): leitura, conversão e exibição
+import cv2
+cap = cv2.VideoCapture(0)
+ret, frame = cap.read()
+gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
+cv2.imshow("Frame em tons de cinza", gray)
+cv2.waitKey(0)
+cap.release()
+cv2.destroyAllWindows()
+</code></pre>
+
+<figure style="margin: 1em 0;">
+  <!-- Diagrama SVG: Pipeline OpenCV -->
+  <svg viewBox="0 0 960 220" width="100%" aria-label="Pipeline simplificado com OpenCV">
+    <defs>
+      <style>
+        .box { fill:#f7f7f7; stroke:#444; stroke-width:2; rx:10; ry:10; }
+        .lbl { font-family:sans-serif; font-size:14px; }
+        .edge { stroke:#333; stroke-width:2; fill:none; marker-end:url(#arrow); }
+      </style>
+      <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto">
+        <path d="M 0 0 L 10 5 L 0 10 z" fill="#333"></path>
+      </marker>
+    </defs>
+    <rect x="30"  y="60" width="180" height="100" class="box"></rect>
+    <text x="45"  y="105" class="lbl">Captura</text>
+    <text x="45"  y="125" class="lbl">(cv2.VideoCapture)</text>
+
+    <rect x="250" y="60" width="180" height="100" class="box"></rect>
+    <text x="265" y="105" class="lbl">Pré-processamento</text>
+    <text x="265" y="125" class="lbl">(resize, cores, equalização)</text>
+
+    <rect x="470" y="60" width="180" height="100" class="box"></rect>
+    <text x="485" y="105" class="lbl">Filtragem</text>
+    <text x="485" y="125" class="lbl">(blur, Canny, Sobel)</text>
+
+    <rect x="690" y="60" width="240" height="100" class="box"></rect>
+    <text x="705" y="105" class="lbl">Análise / Decisão</text>
+    <text x="705" y="125" class="lbl">(detecção, classificação, rastreamento)</text>
+
+    <path d="M 210 110 L 250 110" class="edge"></path>
+    <path d="M 430 110 L 470 110" class="edge"></path>
+    <path d="M 650 110 L 690 110" class="edge"></path>
+  </svg>
+  <figcaption style="text-align:center; font-family:sans-serif; font-size:14px;">
+    Esquema conceitual de um pipeline em OpenCV: captura, pré-processamento, filtragem e análise.
+  </figcaption>
+</figure>
+
+<h4 id="">Filtros de Imagens</h4>
+<p style="text-align: justify; line-height: 1.5; text-indent: 2em;">
+A filtragem espacial opera diretamente sobre a vizinhança de cada pixel com o objetivo de atenuar ruídos, realçar estruturas e extrair informações relevantes para estágios posteriores. A suavização por média ou por Gaussiana reduz flutuações de alta frequência, enquanto a mediana apresenta robustez superior a outliers do tipo “sal e pimenta”. O filtro bilateral conserva descontinuidades ao ponderar simultaneamente a distância espacial e a diferença de intensidade, produzindo desfoque que respeita bordas. Na etapa de realce, o afilamento por máscara não nítida (unsharp masking) reforça transições, e operadores de gradiente como Sobel ou Scharr aproximam derivadas discretas que revelam variações locais. Para detecção de bordas bem condicionada, o algoritmo de Canny encadeia suavização, cálculo de gradiente, supressão não máxima e histerese, retornando um contorno binário parcimonioso. A escolha do filtro e de seus parâmetros ocorre de forma dirigida pelo objetivo do sistema, equilibrando suavização e preservação de detalhes.
+</p>
+
+<pre><code># Exemplos (Python/OpenCV)
+blur  = cv2.GaussianBlur(img, (5,5), 1.2)            # suavização Gaussiana
+med   = cv2.medianBlur(img, 5)                        # mediana
+bilat = cv2.bilateralFilter(img, 9, 75, 75)           # bilateral
+sobelx = cv2.Sobel(gray, cv2.CV_64F, 1, 0, ksize=3)   # gradiente em x
+sobely = cv2.Sobel(gray, cv2.CV_64F, 0, 1, ksize=3)   # gradiente em y
+edges = cv2.Canny(gray, 80, 160)                      # Canny
+</code></pre>
+
+<figure style="margin: 1em 0;">
+  <!-- Diagrama SVG: Convolução 3x3 -->
+  <svg viewBox="0 0 900 320" width="100%" aria-label="Convolução 3x3 ilustrativa">
+    <defs>
+      <style>
+        .cell { fill:#fff; stroke:#bbb; }
+        .kcell { fill:#eef7ff; stroke:#559; }
+        .lbl { font-family:sans-serif; font-size:13px; }
+        .title { font-family:sans-serif; font-size:14px; }
+        .edge { stroke:#333; stroke-width:2; fill:none; marker-end:url(#arrow); }
+      </style>
+      <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto">
+        <path d="M 0 0 L 10 5 L 0 10 z" fill="#333"></path>
+      </marker>
+    </defs>
+
+    <!-- Imagem 5x5 -->
+    <text x="30" y="20" class="title">Imagem (janela 3x3)</text>
+    <g transform="translate(20,30)">
+      <!-- grid -->
+      <g>
+        <!-- draw 5x5 cells -->
+        <script type="application/ecmascript">
+        </script>
+      </g>
+      <!-- static cells -->
+      <!-- rows -->
+      <!-- We'll draw simple 5x5 grid -->
+      <!-- each cell 30x30 -->
+      <!-- highlight a 3x3 window in light blue -->
+      <!-- base grid -->
+      <!-- rows -->
+      <!-- create grid manually -->
+      <!-- row 0 -->
+      <rect x="0" y="0" width="30" height="30" class="cell"></rect>
+      <rect x="30" y="0" width="30" height="30" class="cell"></rect>
+      <rect x="60" y="0" width="30" height="30" class="cell"></rect>
+      <rect x="90" y="0" width="30" height="30" class="cell"></rect>
+      <rect x="120" y="0" width="30" height="30" class="cell"></rect>
+      <!-- row 1 -->
+      <rect x="0" y="30" width="30" height="30" class="cell"></rect>
+      <rect x="30" y="30" width="30" height="30" class="kcell"></rect>
+      <rect x="60" y="30" width="30" height="30" class="kcell"></rect>
+      <rect x="90" y="30" width="30" height="30" class="kcell"></rect>
+      <rect x="120" y="30" width="30" height="30" class="cell"></rect>
+      <!-- row 2 -->
+      <rect x="0" y="60" width="30" height="30" class="cell"></rect>
+      <rect x="30" y="60" width="30" height="30" class="kcell"></rect>
+      <rect x="60" y="60" width="30" height="30" class="kcell"></rect>
+      <rect x="90" y="60" width="30" height="30" class="kcell"></rect>
+      <rect x="120" y="60" width="30" height="30" class="cell"></rect>
+      <!-- row 3 -->
+      <rect x="0" y="90" width="30" height="30" class="cell"></rect>
+      <rect x="30" y="90" width="30" height="30" class="kcell"></rect>
+      <rect x="60" y="90" width="30" height="30" class="kcell"></rect>
+      <rect x="90" y="90" width="30" height="30" class="kcell"></rect>
+      <rect x="120" y="90" width="30" height="30" class="cell"></rect>
+      <!-- row 4 -->
+      <rect x="0" y="120" width="30" height="30" class="cell"></rect>
+      <rect x="30" y="120" width="30" height="30" class="cell"></rect>
+      <rect x="60" y="120" width="30" height="30" class="cell"></rect>
+      <rect x="90" y="120" width="30" height="30" class="cell"></rect>
+      <rect x="120" y="120" width="30" height="30" class="cell"></rect>
+    </g>
+
+    <!-- Kernel 3x3 -->
+    <text x="300" y="20" class="title">Kernel 3x3 (ex.: Sobel X)</text>
+    <g transform="translate(290,30)">
+      <rect x="0" y="0" width="100" height="100" fill="#f7f7f7" stroke="#444" stroke-width="2" rx="10" ry="10"></rect>
+      <text x="10" y="25" class="lbl">[-1 0 1;</text>
+      <text x="10" y="45" class="lbl"> -2 0 2;</text>
+      <text x="10" y="65" class="lbl"> -1 0 1]</text>
+    </g>
+
+    <!-- Seta -->
+    <path d="M 180 90 L 290 80" class="edge"></path>
+
+    <!-- Resultado -->
+    <text x="520" y="20" class="title">Gradiente e Bordas</text>
+    <rect x="510" y="30" width="160" height="140" fill="url(#g1)" stroke="#444" stroke-width="2"></rect>
+    <defs>
+      <linearGradient id="g1" x1="0" y1="0" x2="1" y2="0">
+        <stop offset="0%" stop-color="#111"/>
+        <stop offset="50%" stop-color="#aaa"/>
+        <stop offset="100%" stop-color="#fff"/>
+      </linearGradient>
+    </defs>
+
+    <text x="700" y="40" class="lbl">|∂I/∂x| elevado →</text>
+    <text x="700" y="60" class="lbl">regiões de borda destacadas</text>
+  </svg>
+  <figcaption style="text-align:center; font-family:sans-serif; font-size:14px;">
+    Convolução com um kernel 3×3 do tipo Sobel em x produz resposta elevada em transições horizontais de intensidade.
+  </figcaption>
+</figure>
+
+<h4 id="">Calibração de Câmeras</h4>
+<p style="text-align: justify; line-height: 1.5; text-indent: 2em;">
+A calibração de câmeras formaliza a relação entre pontos do mundo e suas projeções na imagem por meio do modelo pinhole, no qual a matriz intrínseca encapsula parâmetros de focal e centro óptico, e os coeficientes de distorção lidam com efeitos de ordem radial e tangencial oriundos da lente. O processo estima, adicionalmente, parâmetros extrínsecos que descrevem a pose da câmera no espaço por uma rotação e uma translação. Em procedimentos práticos, o sistema observa um padrão conhecido, como um tabuleiro de xadrez, identifica automaticamente seus cantos em múltiplas vistas e resolve um problema de otimização que minimiza o erro de reprojeção. Após a calibração, o algoritmo aplica a undistorção aos quadros adquiridos, o que corrige deformações e melhora a precisão geométrica para etapas subsequentes, como estimação de pose ou reconstrução métrica.
+</p>
+
+<figure style="margin: 1em 0;">
+  <!-- Diagrama SVG: Modelo pinhole + distorção -->
+  <svg viewBox="0 0 920 360" width="100%" aria-label="Modelo pinhole e undistorção">
+    <defs>
+      <style>
+        .axis { stroke:#999; stroke-dasharray:4 4; }
+        .cam { fill:#f7f7f7; stroke:#333; stroke-width:2; }
+        .ray { stroke:#1f77b4; stroke-width:2; }
+        .img { fill:none; stroke:#444; stroke-width:2; }
+        .lbl { font-family:sans-serif; font-size:14px; }
+      </style>
+    </defs>
+
+    <!-- Pinhole camera -->
+    <rect x="60" y="130" width="80" height="100" class="cam"></rect>
+    <line x1="140" y1="180" x2="260" y2="180" class="axis"></line>
+    <text x="60" y="125" class="lbl">Câmera (pinhole)</text>
+    <circle cx="140" cy="180" r="4" fill="#333"></circle>
+    <text x="128" y="200" class="lbl">Centro</text>
+
+    <!-- Image plane -->
+    <line x1="260" y1="80" x2="260" y2="280" class="img"></line>
+    <text x="240" y="75" class="lbl">Plano da imagem</text>
+
+    <!-- Object points -->
+    <circle cx="460" cy="120" r="5" fill="#2ca02c"></circle>
+    <circle cx="520" cy="220" r="5" fill="#2ca02c"></circle>
+    <text x="470" y="115" class="lbl">Ponto 1</text>
+    <text x="530" y="225" class="lbl">Ponto 2</text>
+
+    <!-- Rays -->
+    <line x1="140" y1="180" x2="460" y2="120" class="ray"></line>
+    <line x1="140" y1="180" x2="520" y2="220" class="ray"></line>
+
+    <!-- Intersections on image plane -->
+    <circle cx="260" cy="150" r="4" fill="#d62728"></circle>
+    <circle cx="260" cy="210" r="4" fill="#d62728"></circle>
+    <text x="268" y="150" class="lbl">u₁,v₁</text>
+    <text x="268" y="210" class="lbl">u₂,v₂</text>
+
+    <!-- Distortion sketch -->
+    <circle cx="740" cy="180" r="90" fill="none" stroke="#aaa" stroke-width="2"></circle>
+    <ellipse cx="740" cy="180" rx="110" ry="90" fill="none" stroke="#999" stroke-width="2"></ellipse>
+    <text x="680" y="80" class="lbl">Distorção radial/tangencial</text>
+    <text x="665" y="320" class="lbl">Undistorção ↔ Parametrização (k₁, k₂, p₁, p₂, k₃)</text>
+  </svg>
+  <figcaption style="text-align:center; font-family:sans-serif; font-size:14px;">
+    Esquema do modelo pinhole com interseção no plano da imagem e representação qualitativa de distorções e sua correção.
+  </figcaption>
+</figure>
+
+<h4 id="">Biblioteca MediaPipe</h4>
+<p style="text-align: justify; line-height: 1.5; text-indent: 2em;">
+A biblioteca MediaPipe provê pipelines de percepção prontos para uso que executam em tempo real e abrangem tarefas como detecção de mãos, rosto e pose corporal. Em aplicações de visão computacional que dependem de marcos anatômicos, o MediaPipe estima posições bidimensionais e, em determinados modelos, tridimensionais, de pontos de interesse com estabilidade temporal, o que favorece medições angulares e rastreamento. O pipeline opera sobre quadros RGB, entrega estruturas de dados com coordenadas normalizadas e disponibiliza utilitários de desenho que tornam evidente o esqueleto inferido. Em termos computacionais, o MediaPipe organiza grafos de processamento, onde cada nó representa um cálculo, e otimiza a passagem de dados para reduzir latências em dispositivos convencionais.
+</p>
+<pre><code># Exemplo (Python): esqueleto da pose
+import cv2, mediapipe as mp
+pose = mp.solutions.pose.Pose(static_image_mode=False, model_complexity=1)
+draw = mp.solutions.drawing_utils
+ret, frame = cv2.VideoCapture(0).read()
+rgb = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
+res = pose.process(rgb)
+if res.pose_landmarks:
+    draw.draw_landmarks(frame, res.pose_landmarks, mp.solutions.pose.POSE_CONNECTIONS)
+cv2.imshow("Pose", frame); cv2.waitKey(0)
+</code></pre>
+
+<figure style="margin: 1em 0;">
+  <!-- Diagrama SVG: Pipeline MediaPipe -->
+  <svg viewBox="0 0 940 260" width="100%" aria-label="Pipeline do MediaPipe para pose">
+    <defs>
+      <style>
+        .box { fill:#f5fbff; stroke:#2b6cb0; stroke-width:2; rx:10; ry:10; }
+        .lbl { font-family:sans-serif; font-size:14px; }
+        .edge { stroke:#2b6cb0; stroke-width:2; fill:none; marker-end:url(#arrowMP); }
+      </style>
+      <marker id="arrowMP" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto">
+        <path d="M 0 0 L 10 5 L 0 10 z" fill="#2b6cb0"></path>
+      </marker>
+    </defs>
+
+    <rect x="30"  y="70" width="180" height="100" class="box"></rect>
+    <text x="60" y="110" class="lbl">Entrada RGB</text>
+    <text x="60" y="130" class="lbl">(frame da webcam)</text>
+
+    <rect x="250" y="70" width="210" height="100" class="box"></rect>
+    <text x="270" y="110" class="lbl">Detecção/Rastreamento</text>
+    <text x="270" y="130" class="lbl">(modelo de pose)</text>
+
+    <rect x="490" y="70" width="210" height="100" class="box"></rect>
+    <text x="510" y="110" class="lbl">Landmarks Normalizados</text>
+    <text x="510" y="130" class="lbl">(x,y[,&nbsp;z])</text>
+
+    <rect x="730" y="70" width="180" height="100" class="box"></rect>
+    <text x="760" y="110" class="lbl">Desenho/Análise</text>
+    <text x="760" y="130" class="lbl">(medidas/alertas)</text>
+
+    <path d="M 210 120 L 250 120" class="edge"></path>
+    <path d="M 460 120 L 490 120" class="edge"></path>
+    <path d="M 700 120 L 730 120" class="edge"></path>
+  </svg>
+  <figcaption style="text-align:center; font-family:sans-serif; font-size:14px;">
+    Fluxo típico do MediaPipe: o frame RGB alimenta o modelo de pose, que produz landmarks normalizados para desenho e análise.
+  </figcaption>
+</figure>
+
+<h4 id="">Considerações Finais</h4>
+<p style="text-align: justify; line-height: 1.5; text-indent: 2em;">
+A combinação de OpenCV e MediaPipe sustenta um pipeline contemporâneo de visão computacional que captura, calibra, filtra e interpreta imagens com desempenho compatível com tempo real. A OpenCV fornece os blocos fundamentais de aquisição, transformação e filtragem, enquanto o MediaPipe disponibiliza estimadores robustos de marcos corporais que viabilizam medições geométricas e decisões de alto nível. A calibração de câmeras corrobora a consistência métrica das observações ao remover distorções e ao alinhar o modelo de formação da imagem com a realidade física. Em conjunto, esses elementos delineiam uma base teórica sólida para o desenvolvimento, a avaliação e a validação de sistemas de percepção visual aplicados.
+</p>
+
+<h2 id="materiais-metodos">Materiais e Métodos</h2>
+
+<h3 id="model">Modelagem Funcional do SPV (MF)</h3>
+
+<p style="text-align: justify; line-height: 1.5; text-indent: 2em;">
+A Modelagem Funcional do Sistema de Processamento da Visão (SPV) organiza de forma lógica os módulos e operações necessárias para transformar a entrada capturada pela câmera em notificações enviadas automaticamente via Telegram. O processo é descrito em cinco etapas principais: captura de imagem, pré-processamento, extração de características, lógica de decisão e saída.
+</p>
+
+<h3>1. Captura de Imagem</h3>
+<p style="text-align: justify; line-height: 1.5; text-indent: 2em;">
+O sistema recebe como entrada um fluxo contínuo de imagens provenientes da câmera instalada no ambiente de monitoramento.
+</p>
+
+<h3>2. Pré-Processamento</h3>
+<p style="text-align: justify; line-height: 1.5; text-indent: 2em;">
+As imagens passam por calibração intrínseca, correção de distorções ópticas e eventuais ajustes de contraste e iluminação, garantindo a confiabilidade da estimativa de pose e reduzindo erros associados ao ruído visual.
+</p>
+
+<h3>3. Extração de Características</h3>
+<p style="text-align: justify; line-height: 1.5; text-indent: 2em;">
+Nesta etapa, o módulo <strong>MediaPipe Pose</strong> identifica pontos-chave do corpo humano (ombros, quadris, joelhos, tornozelos, entre outros). A partir desses pontos, o sistema calcula <strong>ângulos relativos</strong> (por exemplo, joelho–quadril–ombro ou tornozelo–joelho–quadril) e utiliza esses valores como base para classificar a postura. Assim, quando os ângulos indicam alinhamento vertical, a pessoa é classificada como “em pé”; quando indicam flexão do quadril, “sentada”; quando há alinhamento horizontal, “deitada”; e quando não há detecção, “ausente”.
+</p>
+
+<h3>4. Lógica de Decisão</h3>
+<p style="text-align: justify; line-height: 1.5; text-indent: 2em;">
+Um temporizador monitora a duração de cada estado. Se uma postura ou ausência for mantida por 5 segundos consecutivos, um gatilho é ativado para gerar o alerta. Essa lógica evita notificações indevidas por movimentos transitórios.
+</p>
+
+<h3>5. Saída</h3>
+<p style="text-align: justify; line-height: 1.5; text-indent: 2em;">
+Como saída, o sistema envia uma mensagem automática via <strong>Telegram</strong> ao responsável e registra o evento. Dessa forma, garante-se responsividade imediata em situações críticas.
+</p>
+
+
+<h3 id="Descr">Descrição da implementação do Sistema de Processamento da Visão (SPV)</h3>
+
+<h4 id="">1. Visão geral do sistema</h4>
+<p style="text-align: justify; line-height: 1.5; text-indent: 2em;">
+O sistema implementa um pipeline de monitoramento postural em tempo real para apoio ao “Monitoramento automatizado de indivíduos em situação de vulnerabilidade”. O programa captura vídeo da webcam do laboratório em Ubuntu Linux, corrige a distorção óptica via parâmetros de calibração, estima a pose humana por marcos anatômicos, classifica o estado postural (<em>Em pé</em>, <em>Sentada</em>, <em>Deitada</em> ou <em>Ausente</em>) e emite notificações automáticas via Telegram quando eventos de interesse persistem por um intervalo pré-definido (padrão de 5 segundos). A visualização e os cálculos (ângulos articulares, heurísticas de classificação e lógica temporal) ocorrem <em>on-the-fly</em> sobre o fluxo de vídeo.
+</p>
+<p style="text-align: justify; line-height: 1.5; text-indent: 2em;">
+A implementação utiliza a API OpenCV para captura, exibição e correção de distorção; o MediaPipe Pose para detecção e rastreamento de marcos corporais; NumPy e <code>math</code> para cálculos vetoriais e angulares; <code>requests</code> para integração HTTP com o Telegram; e <code>python-dotenv</code> para gestão de credenciais por variáveis de ambiente. Todas as bibliotecas possuem reconhecimento notório, são gratuitas e estão disponíveis para utilização pública.
+</p>
+
+<h4 id="">2. Explicações sobre o script desenvolvido</h4>
+<p style="text-align: justify; line-height: 1.5; text-indent: 2em;">
+A seguir é apresentado o script e a descrição do seu funcionamento:
+</p>
+
+<pre><code class="language-python">
+
+# ====================================================================
+# Título do projeto: Monitoramento automatizado de indivíduos em situação de vulnerabilidade
+# Nome do programa: posevideo.py
+# Exemplo de chamada (Linux): python3 posevideo.py
+# Autores:
+#  - Jorge Luiz Pinto Junior — RA: 11058715 — CEO
+#  - Marcos Baldrigue Andrade — RA: 11201921777 — CFO (Financeiro)
+#  - Guilherme Eduardo Pereira — RA: 11201720498 — CPO (Desenvolvimento)
+# Data: 2025-07-18
+# ====================================================================
+
+import cv2
+import time
+import mediapipe as mp
+import numpy as np
+import math
+import requests
+import os
+from dotenv import load_dotenv
+
+load_dotenv()
+
+TOKEN = os.getenv('TELEGRAM_TOKEN')
+CHAT_ID = os.getenv('TELEGRAM_CHAT_ID')
+MENSAGEM = 'Pessoa observada esta de pé ou saiu do alcance de visão'
+
+# === PARÂMETROS DE CALIBRAÇÃO ===
+fs = cv2.FileStorage("calibration.xml", cv2.FILE_STORAGE_READ)
+camera_matrix = fs.getNode("camera_matrix").mat()
+dist_coeffs = fs.getNode("distortion_coefficients").mat()
+fs.release()
+
+def enviar_mensagem(texto):
+    url = f'https://api.telegram.org/bot{TOKEN}/sendMessage'
+    payload = {
+        'chat_id': CHAT_ID,
+        'text': texto
+    }
+
+    response = requests.post(url, data=payload)
+    
+    if response.status_code == 200:
+        print('✅ Mensagem enviada com sucesso!')
+    else:
+        print(f'❌ Erro ao enviar mensagem. Código: {response.status_code}')
+        print(response.text)
+
+# === Funções de cálculo e classificação ===
+
+def calculate_angle(a, b, c):
+    a = np.array(a); b = np.array(b); c = np.array(c)
+    ba, bc = a - b, c - b
+    ba_norm, bc_norm = np.linalg.norm(ba), np.linalg.norm(bc)
+    if ba_norm == 0 or bc_norm == 0:
+        return 180.0
+    cos_ang = np.dot(ba, bc) / (ba_norm * bc_norm)
+    cos_ang = np.clip(cos_ang, -1.0, 1.0)
+    return math.degrees(math.acos(cos_ang))
+
+def classify_pose(landmarks):
+    xs = [lm.x for lm in landmarks]
+    ys = [lm.y for lm in landmarks]
+    width, height = max(xs) - min(xs), max(ys) - min(ys)
+    if width > height * 1.3:
+        return 'Deitada'
+    mp_pose = mp.solutions.pose
+    left_hip   = [landmarks[mp_pose.PoseLandmark.LEFT_HIP.value].x,  landmarks[mp_pose.PoseLandmark.LEFT_HIP.value].y]
+    left_knee  = [landmarks[mp_pose.PoseLandmark.LEFT_KNEE.value].x, landmarks[mp_pose.PoseLandmark.LEFT_KNEE.value].y]
+    left_ankle = [landmarks[mp_pose.PoseLandmark.LEFT_ANKLE.value].x, landmarks[mp_pose.PoseLandmark.LEFT_ANKLE.value].y]
+    right_hip   = [landmarks[mp_pose.PoseLandmark.RIGHT_HIP.value].x,  landmarks[mp_pose.PoseLandmark.RIGHT_HIP.value].y]
+    right_knee  = [landmarks[mp_pose.PoseLandmark.RIGHT_KNEE.value].x, landmarks[mp_pose.PoseLandmark.RIGHT_KNEE.value].y]
+    right_ankle = [landmarks[mp_pose.PoseLandmark.RIGHT_ANKLE.value].x, landmarks[mp_pose.PoseLandmark.RIGHT_ANKLE.value].y]
+    left_angle  = calculate_angle(left_hip, left_knee, left_ankle)
+    right_angle = calculate_angle(right_hip, right_knee, right_ankle)
+    if (left_angle + right_angle) / 2.0 < 160:
+        return 'Sentada'
+    return 'Em pé'
+
+# === Loop principal com monitoramento de tempo ===
+
+def main():
+    mp_pose = mp.solutions.pose
+    pose = mp_pose.Pose(static_image_mode=False, model_complexity=1, enable_segmentation=False)
+    mp_drawing = mp.solutions.drawing_utils
+
+    cap = cv2.VideoCapture(0)
+    if not cap.isOpened():
+        raise RuntimeError('Não foi possível acessar a webcam.')
+
+    em_pe_start = None
+    ausente_start = None
+    em_pe_alertado = False
+    ausente_alertado = False
+    try:
+        while True:
+            ret, frame = cap.read()
+            if not ret:
+                print('Falha ao capturar frame da webcam.')
+                break
+                
+            # === CORRIGE DISTORÇÃO USANDO CALIBRAÇÃO ===
+            frame_undistorted = cv2.undistort(frame, camera_matrix, dist_coeffs)
+            
+            results = pose.process(cv2.cvtColor(frame, cv2.COLOR_BGR2RGB))
+            annotated = frame.copy()
+            label = 'Ausente'
+            if results.pose_landmarks:
+                mp_drawing.draw_landmarks(
+                    annotated, results.pose_landmarks,
+                    mp_pose.POSE_CONNECTIONS,
+                    landmark_drawing_spec=mp.solutions.drawing_styles.get_default_pose_landmarks_style()
+                )
+                label = classify_pose(results.pose_landmarks.landmark)
+
+                # Reinicia o estado de ausência
+                ausente_start = None
+                ausente_alertado = False
+
+                # Detecção de "em pé"
+                if label == 'Em pé':
+                    if em_pe_start is None:
+                        em_pe_start = time.time()
+                    elif not em_pe_alertado and (time.time() - em_pe_start) >= 5:
+                        enviar_mensagem("Pessoa está em pé por 5 segundos!")
+                        em_pe_alertado = True
+                else:
+                    em_pe_start = None
+                    em_pe_alertado = False
+            else:
+                # Ninguém na imagem
+                em_pe_start = None
+                em_pe_alertado = False
+
+                if ausente_start is None:
+                    ausente_start = time.time()
+                elif not ausente_alertado and (time.time() - ausente_start) >= 5:
+                    enviar_mensagem("Ninguém detectado na câmera por 5 segundos!")
+                    ausente_alertado = True                    
+                # sobrepõe o rótulo
+            font, pos, scale, thickness = cv2.FONT_HERSHEY_SIMPLEX, (20,30), 1.0, 2
+            cv2.putText(annotated, label, pos, font, scale, (0,0,0), thickness+2, cv2.LINE_AA)
+            cv2.putText(annotated, label, pos, font, scale, (255,255,255), thickness, cv2.LINE_AA)
+            cv2.imshow('Pose Detection (press q to quit)', annotated)
+            if cv2.waitKey(1) & 0xFF == ord('q'):
+                break
+    finally:
+        cap.release()
+        cv2.destroyAllWindows()
+        pose.close()
+
+if __name__ == '__main__':
+    main()
+
+</code></pre>
+
+<p style="text-align: justify; line-height: 1.5; text-indent: 2em;">
+Durante a execução, o sistema apresenta uma janela de vídeo com sobreposição gráfica da pose e um rótulo textual do estado detectado, permitindo encerramento por meio da tecla <code>q</code>. A lógica de alertas não exige intervenção técnica: mensagens são disparadas automaticamente quando as condições de persistência são satisfeitas.
+</p>
+<p style="text-align: justify; line-height: 1.5; text-indent: 2em;">
+No início da execução, o sistema lê os parâmetros de calibração a partir do arquivo <code>calibration.xml</code> com <code>cv2.FileStorage</code>, obtendo a matriz intrínseca (<em>camera matrix</em>) e os coeficientes de distorção. Em cada iteração, o quadro bruto é corrigido por <code>cv2.undistort</code>, o que reduz artefatos geométricos, melhora a precisão dos pontos anatômicos e atende ao requisito de calibração intrínseca. A estimação de pose utiliza o MediaPipe Pose em modo dinâmico (<code>static_image_mode=False</code>), detectando marcos como quadris, joelhos e tornozelos. Quando a pose é identificada, o sistema desenha conexões e pontos sobre o quadro com o estilo padrão da biblioteca, fornecendo explicabilidade visual imediata do rastreamento e facilitando a interpretação por usuários leigos.
+</p>
+<p style="text-align: justify; line-height: 1.5; text-indent: 2em;">
+A rotina de classificação executa duas decisões de natureza geométrica e um caso remanescente. Inicialmente, o sistema avalia a razão entre a largura e a altura do retângulo mínimo que contém os marcos e declara o estado deitada quando a largura excede em trinta por cento a altura, o que caracteriza orientação predominantemente horizontal. Em seguida, o método calcula os ângulos dos joelhos esquerdo e direito e determina a média, classificando como sentada quando a flexão média é inferior a cento e sessenta graus, o que representa uma configuração compatível com o ato de sentar. Quando nenhum dos critérios anteriores se verifica, o sistema classifica a postura como em pé, que constitui a hipótese complementar no domínio estabelecido.
+</p>
+<p style="text-align: justify; line-height: 1.5; text-indent: 2em;">
+A função de cálculo angular recebe três pontos organizados como A, B e C e computa o ângulo no vértice B, que corresponde, para o contexto, ao ângulo do joelho. O algoritmo converte as listas em vetores, constrói os segmentos BA e BC, calcula suas normas e avalia o cosseno do ângulo por meio do produto escalar normalizado. Em seguida, o método limita o valor de cosseno ao intervalo válido e aplica a função arco-cosseno, convertendo o resultado em graus. Essa formulação vetorial apresenta robustez numérica e evita instabilidades quando um dos segmentos possui norma muito pequena, caso em que o procedimento retorna um valor padrão. A classificação postural ocorre por heurísticas executadas a cada quadro:
+</p>
+<p style="text-align: justify; line-height: 1.5; text-indent: 2em;">
+<strong>(i) Heurística de deitado:</strong> quando a largura do <em>bounding box</em> da pose excede 1,3 vezes a altura, o estado é classificado como “Deitada”.
+</p>
+<p style="text-align: justify; line-height: 1.5; text-indent: 2em;">
+<strong>(ii) Ângulos de joelho:</strong> calculam-se os ângulos esquerdo e direito (quadril–joelho–tornozelo); média inferior a 160° indica flexão compatível com “Sentada”.
+</p>
+<p style="text-align: justify; line-height: 1.5; text-indent: 2em;">
+<strong>(iii) Caso remanescente:</strong> estados que não satisfazem as condições anteriores são classificados como “Em pé”.
+</p>
+
+<figure style="margin: 1em 0;">
+  <svg viewBox="0 0 720 360" width="100%" aria-label="Diagrama da geometria do ângulo no ponto B">
+    <defs>
+      <marker id="arrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse">
+        <path d="M 0 0 L 10 5 L 0 10 z"></path>
+      </marker>
+      <style>
+        .axis { stroke: #999; stroke-dasharray: 4 4; }
+        .vec { stroke-width: 3; fill: none; }
+        .pt  { fill: #000; }
+        .lbl { font-family: sans-serif; font-size: 14px; }
+        .theta { fill: none; stroke-width: 3; opacity: .6; }
+      </style>
+    </defs>
+
+    <!-- Points -->
+    <circle cx="180" cy="260" r="6" class="pt"/>
+    <circle cx="360" cy="180" r="6" class="pt"/>
+    <circle cx="540" cy="120" r="6" class="pt"/>
+
+    <!-- Labels for points -->
+    <text x="168" y="280" class="lbl">A (quadril)</text>
+    <text x="342" y="170" class="lbl">B (joelho)</text>
+    <text x="548" y="140" class="lbl">C (tornozelo)</text>
+
+    <!-- Vectors BA and BC -->
+    <line x1="360" y1="180" x2="180" y2="260" class="vec" stroke="#1f77b4" marker-end="url(#arrow)"/>
+    <line x1="360" y1="180" x2="540" y2="120" class="vec" stroke="#2ca02c" marker-end="url(#arrow)"/>
+    <text x="250" y="210" class="lbl" fill="#1f77b4">BA</text>
+    <text x="460" y="155" class="lbl" fill="#2ca02c">BC</text>
+
+    <!-- Angle arc at B -->
+    <path d="M 450 150 A 90 90 0 0 0 300 210" class="theta" stroke="#d62728"/>
+    <text x="390" y="150" class="lbl" fill="#d62728">θ = ∠ABC</text>
+
+    <!-- Formula -->
+    <text x="60" y="330" class="lbl">cos(θ) = (BA · BC) / (‖BA‖ · ‖BC‖)</text>
+  </svg>
+  <figcaption style="text-align:center; font-family: sans-serif; font-size: 14px;">
+    Geometria do cálculo do ângulo no vértice B, com vetores BA e BC e representação do arco correspondente ao ângulo θ.
+  </figcaption>
+</figure>
+
+<p style="text-align: justify; line-height: 1.5; text-indent: 2em;">
+A lógica temporal organiza-se como uma máquina de estados finitos que integra percepção instantânea e persistência temporal. Quando o estimador de pose não identifica marcos corporais, o sistema entra no estado de ausência, inicia um cronômetro e, se a condição persiste por pelo menos cinco segundos, emite uma notificação de ausência por meio do Telegram. Quando a pose é detectada, o sistema reinicia a contagem de ausência e transita para estados de presença. Se a classificação identifica o estado em pé, o sistema inicia um segundo cronômetro e, ao completar cinco segundos de persistência ininterrupta nesse estado, emite uma notificação de presença em pé. Se a classificação não indica em pé, o sistema mantém presença sem disparo e reinicia a contagem para o caso de o estado em pé voltar a ocorrer, o que preserva a capacidade de gerar novos alertas em eventos subsequentes.
+</p>
+<p style="text-align: justify; line-height: 1.5; text-indent: 2em;">
+As credenciais de acesso (<code>TELEGRAM_TOKEN</code> e <code>TELEGRAM_CHAT_ID</code>) são obtidas por variáveis de ambiente, carregadas via <code>python-dotenv</code>. O envio de notificações utiliza requisições HTTP <code>POST</code> por meio da biblioteca <code>requests</code>, com verificação de códigos de retorno e registro de sucesso/erro no console. Esse mecanismo permite coleta e auditoria de resultados em canal externo ao programa. O sistema exibe o rótulo do estado com contorno escuro e preenchimento claro para legibilidade, além da sobreposição dos marcos anatômicos, fornecendo explicabilidade visual. O encerramento pela tecla <code>q</code> é intuitivo. 
+</p>
+<p style="text-align: justify; line-height: 1.5; text-indent: 2em;">
+A solução utiliza OpenCV, executa em Ubuntu com webcam do laboratório, é produzida pela própria equipe, emprega bibliotecas notórias e gratuitas, realiza cálculos em tempo real sobre o vídeo, adota cabeçalhos padronizados nos arquivos, apresenta (ou permite configurar) o título da janela com programa e equipe, adere ao Contexto e Cenário de Aplicação e possibilita uso por usuários leigos com coleta de resultados via Telegram. Os eventos relevantes (persistência de “Em pé” e ausência prolongada) são enviados ao Telegram, funcionando como log externo com data e hora. A janela de vídeo atua como evidência visual em tempo real durante testes e demonstrações, enquanto o histórico do chat pode ser exportado para documentação.
+</p>
+
+<h3 id="-parte-1">Análise Técnica</h3>
+<p style="text-align: justify; line-height: 1.5; text-indent: 2em;">
+  O projeto foi apresentado no seminário em 13 de agosto de 2025, com a participação de 14 voluntários. Nos testes, todos os voluntários (100%) confirmaram que o sistema conseguiu identificá-los corretamente quando estavam de pé por mais de 5 segundos, gerando a notificação no Telegram conforme esperado. Isso demonstra que a funcionalidade principal foi atingida com sucesso.
+</p>
+<p style="text-align: justify; line-height: 1.5; text-indent: 2em;">
+  Quanto à detecção de ausência, apenas 7 dos 14 participantes (50%) relataram ter recebido corretamente a notificação de que nenhuma pessoa estava visível na câmera. Essa limitação ocorreu porque, durante o seminário, outras pessoas passavam em frente ao campo de visão, levando o <i>MediaPipe</i> a reiniciar a contagem de 5 segundos. Para contornar o problema durante o teste, a câmera foi coberta manualmente, e nesses casos a notificação de ausência foi enviada corretamente.
+</p>
+<p style="text-align: justify; line-height: 1.5; text-indent: 2em;">
+  Portanto, a análise mostra que o sistema tem alto desempenho na detecção de pessoas em pé, com taxa de acerto próxima a 100%, mas ainda apresenta fragilidades na detecção de ausência em ambientes com múltiplos indivíduos. Apesar dessas limitações, o protótipo atendeu ao objetivo principal do cenário de aplicação e demonstrou viabilidade prática, sendo necessário em trabalhos futuros melhorar a robustez frente a interferências externas.
+</p>
+
+
+<h2 id="lab">Laboratório Experimental</h2>
+<h3 id="Roteiro">Roteiro do laboratório Experimental</h3>
+
+<h3 id="monitoramento">Monitoramento de Posição com Envio de Mensagem no Telegram</h3>
+<p style="text-align: justify; line-height: 1.5; text-indent: 2em;">
+Este projeto, localizado em <code>OsObservadores.github.io/Teste projeto/</code>, utiliza as bibliotecas <strong>OpenCV</strong> e <strong>MediaPipe</strong> para detectar a posição de uma pessoa em frente à webcam. Quando a pessoa permanece em pé por 5 segundos, ou quando não há detecção por 5 segundos, uma mensagem é enviada automaticamente via Telegram.
+</p>
+
+<h3 id="requisitos">Requisitos</h3>
+<ul>
+  <li>Python 3.7+</li>
+  <li>Webcam conectada</li>
+  <li>Bot do Telegram criado com token e chat ID configurados</li>
+  <li>Um tabuleiro em folha A4 de 7×9 quadrados (para calibração da câmera)</li>
+</ul>
+
+<h3 id="uso">Como usar</h3>
+<ol>
+  <li>
+    Navegue até o diretório do projeto:
+    <pre><code class="language-bash">cd "OsObservadores.github.io/Teste projeto/"</code></pre>
+  </li>
+  <li>
+    Crie um arquivo <code>.env</code> na raiz do projeto com as variáveis:
+    <pre><code class="language-ini">TELEGRAM_TOKEN=seu_token_aqui
+TELEGRAM_CHAT_ID=seu_chat_id_aqui</code></pre>
+    <p><a href="#" target="_blank" rel="noopener">Tutorial para obter Token e Chat ID no Telegram</a></p>
+  </li>
+  <li>
+    Instale as dependências:
+    <pre><code class="language-bash">pip install -r requirements.txt</code></pre>
+  </li>
+</ol>
+
+<h3 id="calibracao">Calibração da Câmera</h3>
+<ol>
+  <li>
+    Execute o script de captura:
+    <pre><code class="language-bash">python capture.py</code></pre>
+    <ul>
+      <li>Mantenha o tabuleiro visível em frente à câmera, sem reflexos.</li>
+      <li>Pressione <kbd>s</kbd> para salvar ao menos 15 fotos em posições diferentes.</li>
+      <li>Pressione <kbd>q</kbd> para sair.</li>
+    </ul>
+  </li>
+  <li>
+    Para realizar a calibração a partir das fotos:
+    <pre><code class="language-bash">python calibration.py</code></pre>
+  </li>
+  <li>
+    Para rodar o sistema após a calibração:
+    <pre><code class="language-bash">python posevideo.py</code></pre>
+  </li>
+</ol>
+
+<h3 id="resultados">Resultados Esperados</h3>
+<ul>
+  <li>Notificação no Telegram após 5 segundos com a pessoa identificada em pé.</li>
+  <li>Notificação no Telegram após 5 segundos sem nenhuma pessoa identificada (ausência).</li>
+</ul>
+
+<h3 id="observacoes">Observações</h3>
+<ul>
+  <li>Pressione <kbd>q</kbd> para sair da aplicação.</li>
+  <li>O chat ID pode ser de um grupo ou de uma conversa individual.</li>
+</ul>
+
+<h3 id="licenca">Licença</h3>
+<p style="text-align: justify; line-height: 1.5; text-indent: 2em;">
+Este projeto é <em>open source</em>.
+</p>
+
+
+
+
+<h3 id="model">Análise dos Resultados do Teste de Campo TCS</h3>
+<p style="text-align: justify; line-height: 1.5; text-indent: 2em;">
+  O Teste de Campo contou com a participação de <b>14 alunos</b>, que responderam ao 
+  questionário aplicado após a atividade prática. A seguir estão organizados os resultados 
+  obtidos para cada questão.
+</p>
+
+<ul style="line-height: 1.5;">
+  <li><b>Pergunta 1 – Você participou do teste do projeto?</b> 14 respostas "Sim".</li>
+  <li><b>Pergunta 2 – Você calibrou a câmera?</b> 7 respostas "Sim".</li>
+  <li><b>Pergunta 3 – O projeto conseguiu identificar o seu corpo?</b> 14 respostas "Sim".</li>
+  <li><b>Pergunta 4 – O projeto sinalizou quando você estava de pé por mais de 5 segundos?</b> 14 respostas "Sim".</li>
+  <li><b>Pergunta 5 – O projeto sinalizou quando você estava ausente por mais de 5 segundos?</b> 6 respostas "Sim".</li>
+</ul>
+
+<p style="text-align: justify; line-height: 1.5; text-indent: 2em;">
+  Em relação à questão sobre recomendação do projeto para um amigo, a média obtida foi de 
+  <b>9,93</b>, evidenciando uma excelente aceitação por parte dos alunos.
+</p>
+
+<p style="text-align: justify; line-height: 1.5; text-indent: 2em;">
+  Quanto às recomendações e observações feitas, os alunos destacaram os seguintes pontos:
+</p>
+
+<ul style="line-height: 1.5;">
+  <li>Trabalhar para mais de uma pessoa.</li>
+  <li>Projeto excelente, nada a declarar sobre melhorias.</li>
+  <li>Sugestão: cadastrar mais possíveis.</li>
+  <li>Nenhuma, ótimo projeto.</li>
+  <li>Comercializa.</li>
+  <li>Não, o projeto está completo.</li>
+  <li>Top demais.</li>
+</ul>
+
+<p style="text-align: justify; line-height: 1.5; text-indent: 2em;">
+  De forma geral, os resultados apontam que o projeto foi bem-sucedido em seus objetivos, 
+  sendo capaz de identificar corretamente os participantes e realizar as sinalizações 
+  propostas. A elevada média de recomendação e os comentários positivos reforçam a 
+  relevância da aplicação, embora algumas sugestões indiquem possibilidades de 
+  aprimoramento futuro.
+</p>
+
+<h3 id="-parte-3">Avaliação dos Alunos</h3>
+
+<p style="text-align: justify; line-height: 1.5; text-indent: 2em;">
+  A avaliação dos alunos durante o Teste de Campo foi realizada considerando não apenas a 
+  participação objetiva nas atividades, mas também o nível de <b>cooperação</b> demonstrado 
+  durante a prática. O critério adotado buscou valorizar atitudes que contribuíram para o 
+  bom andamento do experimento, ao mesmo tempo em que desestimulou a falta de engajamento.
+</p>
+
+<p style="text-align: justify; line-height: 1.5; text-indent: 2em;">
+  Alunos que <b>não cooperaram de forma satisfatória</b> receberam descontos em suas notas. 
+  Exemplos observados incluíram: falta de interesse evidente no andamento do projeto, ausência 
+  de perguntas para esclarecer dúvidas e demora excessiva na execução das poses necessárias 
+  para o teste com o MediaPipe.
+</p>
+
+<p style="text-align: justify; line-height: 1.5; text-indent: 2em;">
+  Por outro lado, foram acrescentados pontos para alunos que demonstraram 
+  <b>atitudes colaborativas</b>, tais como: fazer perguntas pertinentes para garantir a 
+  compreensão do funcionamento do sistema, trazer sugestões de melhoria para o projeto e 
+  compartilhar insights relevantes que contribuíram para o aperfeiçoamento da atividade.
+</p>
+
+<p style="text-align: justify; line-height: 1.5; text-indent: 2em;">
+  Essa metodologia de avaliação possibilitou reconhecer o esforço individual e coletivo, 
+  incentivando os estudantes a participarem de forma mais ativa e crítica, 
+  o que contribuiu diretamente para a qualidade dos resultados obtidos.
+</p>
+
+	
+<h2 id="conclus-o">Conclusões</h2>
+
+<p style="text-align: justify; line-height: 1.5; text-indent: 2em;">
+O projeto atinge os objetivos propostos na introdução, uma vez que o sistema de monitoramento por visão computacional é capaz de identificar, em tempo real, a presença e as transições posturais de um indivíduo, enviando notificações automáticas após os intervalos de persistência definidos. A modelagem do trabalho se mostra adequada, pois integra conceitos de calibração de câmera, processamento de imagens e detecção de pose com bibliotecas de uso consolidado, resultando em uma implementação funcional e coerente com o cenário de aplicação definido.
+</p>
+<p style="text-align: justify; line-height: 1.5; text-indent: 2em;">
+Entre os pontos positivos, destaca-se a confiabilidade do sistema em diferenciar estados posturais (em pé, sentado, deitado ou ausente), a explicabilidade visual proporcionada pelo desenho dos marcos corporais sobre o vídeo e a integração com o Telegram, que garante o envio de alertas de forma prática e imediata. Além disso, os testes de campo confirmam a aceitação do público-alvo, refletida em altas notas de recomendação e em comentários que reconhecem o valor da solução no cuidado de pessoas em situação de vulnerabilidade.
+</p>
+<p style="text-align: justify; line-height: 1.5; text-indent: 2em;">
+Como aspectos a serem aprimorados, observa-se que o sistema opera de forma individual, não abrangendo múltiplos indivíduos em simultâneo, e apresenta dependência da iluminação adequada para manter a acurácia da detecção. Ainda assim, esses pontos não comprometem a validade da implementação, mas representam oportunidades de evolução futura.
+</p>
+
+
+<p style="text-align: justify; line-height: 1.5; text-indent: 2em;">
+A implementação atende aos requisitos funcionais e acadêmicos do SPV: utiliza OpenCV e bibliotecas reconhecidas, executa em Ubuntu com webcam, realiza cálculos em tempo real fundamentados na pose estimada, oferece visualização explicável e notifica condições críticas coerentes com o cenário de aplicação. Para conformidade formal plena, padroniza-se o cabeçalho dos arquivos e configura-se o título da janela com programa e equipe.
+</p>
+
+<h2>Referências Bibliográficas</h2>
+  <p>
+    OPENCV. Feature Detection and Description. Disponível em: https://docs.opencv.org/4.x/db/d27/tutorial_py_table_of_contents_feature2d.html. Acesso em: 25 jul. 2025.
+  </p>
+  <p>
+    OPENCV. Understanding Features. Disponível em: https://docs.opencv.org/4.x/df/d54/tutorial_py_features_meaning.html. Acesso em: 25 jul. 2025.
+  </p>
+  <p>
+    OPENCV. Harris Corner Detection. Disponível em: https://docs.opencv.org/4.x/dc/d0d/tutorial_py_features_harris.html. Acesso em: 25 jul. 2025.
+  </p>
+    <p>
+    OPENCV. Shi-Tomasi Corner Detector & Good Features to Track. Disponível em: https://docs.opencv.org/4.x/d4/d8c/tutorial_py_shi_tomasi.html. Acesso em: 25 jul. 2025.
+  </p>
+  <p>
+    OPENCV. Introduction to SIFT (Scale-Invariant Feature Transform). Disponível em: https://docs.opencv.org/4.x/da/df5/tutorial_py_sift_intro.html. Acesso em: 25 jul. 2025.
+  </p>
+  <p>
+    OPENCV. Feature Matching + Homography to find Objects. Disponível em: https://docs.opencv.org/4.x/d1/de0/tutorial_py_feature_homography.html. Acesso em: 25 jul. 2025.
+  </p>

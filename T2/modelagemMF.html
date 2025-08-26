@@ -1,0 +1,184 @@
+<script type="module">
+  import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.esm.min.mjs';
+  mermaid.initialize({
+    startOnLoad: true,
+    theme: "base", // mais neutro
+    themeVariables: {
+      primaryColor: "#ffffff",
+      primaryTextColor: "#000000",
+      primaryBorderColor: "#cccccc",
+      lineColor: "#666666",
+      textColor: "#000000",
+      fontSize: "16px",
+      fontFamily: "Arial, sans-serif"
+    }
+  });
+</script>
+
+<h1 id="etapa-2-modelagem-funcional-do-sistema">Etapa 2: Modelagem Funcional do Sistema</h1>
+
+<p>Jorge Luiz Pinto Junior  - RA: 11058715 - CEO</p>
+<p>Marcos Baldrigue Andrade - RA: 11201921777 - CFO - Financeiro</p>
+<p>Guilherme Eduardo Pereira - RA: 11201720498 - CPO - Desenvolvimento</p>
+<p>27/06/2025</p>
+
+<h2 id="descricao-geral">Descrição Geral</h2>
+
+<p style="text-align: justify; line-height: 1.5; text-indent: 2em;">
+Este documento apresenta a modelagem funcional de um sistema de monitoramento baseado em visão computacional, cujo objetivo é identificar, de forma automática, o momento em que uma pessoa incapaz — como indivíduos com Alzheimer, limitações cognitivas ou motoras — se levanta da cama, a fim de notificar o cuidador responsável. A modelagem realiza a decomposição funcional do sistema em blocos, descreve os fluxos de dados entre esses blocos por meio de um diagrama (Mermaid) e fornece a descrição individual de cada componente funcional envolvido.
+</p>
+
+<h2 id="diagrama-de-blocos-modelagem-funcional">Diagrama de Blocos - Modelagem Funcional</h2>
+
+  <div class="mermaid">
+    flowchart TD
+
+    A[Captura de Imagem<br>Câmera] --> B[Transmissão de Imagem<br>Streaming em Tempo Real]
+    B --> C[Processamento de Imagem<br>Visão Computacional]
+    C --> D[Detecção de Pessoa<br>Localização no Móvel]
+    D --> E[Análise de Postura<br>Sentado, Deitado, Em Pé]
+    E --> F{Pessoa se Levantou?}
+    F -- Sim --> G[Geração de Evento<br>Evento de Levantamento]
+    G --> H[Envio de Notificação<br>App, SMS, Painel]
+    F -- Não --> I[Fim do Ciclo<br>Aguardando Novo Quadro]
+    H --> J[Registro de Evento<br>Banco de Dados / Logs]
+
+    subgraph Personalização e Configuração
+      K[Configuração de Perfil<br>Horários, Sensibilidade]
+      K --> C
+    end
+
+    subgraph Interface do Cuidador
+      H --> L[Aplicativo ou Painel<br>Recebimento da Notificação]
+    end
+  </div>
+
+<h2 id="descricao-dos-blocos-funcionais">Descrição dos Blocos Funcionais</h2>
+
+<table border="1">
+  <thead>
+    <tr>
+      <th>Bloco</th>
+      <th>Entrada</th>
+      <th>Saída</th>
+      <th>Processamento</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>Captura de Imagem</td>
+      <td>Ambiente monitorado</td>
+      <td>Quadros de vídeo</td>
+      <td>Captura contínua de imagens via câmera instalada.</td>
+    </tr>
+    <tr>
+      <td>Transmissão de Imagem</td>
+      <td>Quadros de vídeo</td>
+      <td>Imagens em tempo real</td>
+      <td>Envia os quadros para o módulo de processamento.</td>
+    </tr>
+    <tr>
+      <td>Processamento de Imagem</td>
+      <td>Imagem ao vivo</td>
+      <td>Mapeamento corporal</td>
+      <td>Identifica a silhueta e a posição da pessoa.</td>
+    </tr>
+    <tr>
+      <td>Detecção de Pessoa</td>
+      <td>Dados da imagem processada</td>
+      <td>Localização em relação à cama</td>
+      <td>Determina se a pessoa está sobre o móvel (cama).</td>
+    </tr>
+    <tr>
+      <td>Análise de Postura</td>
+      <td>Mapa corporal</td>
+      <td>Estado postural</td>
+      <td>Identifica se a pessoa está deitada, sentada ou em pé.</td>
+    </tr>
+    <tr>
+      <td>Verificação de Levantamento</td>
+      <td>Estados anteriores e atuais</td>
+      <td>Sim / Não</td>
+      <td>Compara o estado anterior e atual para detectar mudança.</td>
+    </tr>
+    <tr>
+      <td>Geração de Evento</td>
+      <td>Confirmação de levantamento</td>
+      <td>Evento de alerta</td>
+      <td>Cria um evento interno a ser comunicado ao cuidador.</td>
+    </tr>
+    <tr>
+      <td>Envio de Notificação</td>
+      <td>Evento gerado</td>
+      <td>Notificação</td>
+      <td>Dispara uma notificação via app, SMS ou painel local.</td>
+    </tr>
+    <tr>
+      <td>Registro de Evento</td>
+      <td>Evento e horário</td>
+      <td>Log no sistema</td>
+      <td>Registra a ocorrência no banco de dados.</td>
+    </tr>
+    <tr>
+      <td>Configuração de Perfil</td>
+      <td>Preferências do usuário</td>
+      <td>Parâmetros de operação</td>
+      <td>Define regras de sensibilidade, prioridade e horários.</td>
+    </tr>
+    <tr>
+      <td>Aplicativo ou Painel</td>
+      <td>Notificação recebida</td>
+      <td>Exibição visual</td>
+      <td>Mostra o alerta de forma compreensível para o cuidador.</td>
+    </tr>
+  </tbody>
+</table>
+
+<h2 id="ferramentas-utilizadas">Estimativa do uso de técnicas para o projeto</h2>
+
+<p style="text-align: justify; line-height: 1.5; text-indent: 2em;">
+  O processo de monitoramento automático por visão computacional fundamenta-se em uma sequência estruturada de etapas que permitem identificar a posição de um indivíduo em tempo real, com base na análise comparativa entre imagens capturadas e modelos previamente definidos. Inicialmente, o sistema realiza a captura da imagem, obtendo quadros contínuos a partir de uma câmera posicionada no ambiente de vigilância. Esses quadros são processados em tempo real e servem como entrada para as etapas subsequentes de análise. Em seguida, aplica-se um <strong>filtro de acentuação de bordas</strong>, com o objetivo de destacar as características estruturais mais relevantes da cena, como <strong>cantos e contornos</strong>. Técnicas como o <strong>detector de Canny</strong> são utilizadas para detectar as bordas e melhorar a segmentação dos elementos presentes na imagem. Essa etapa é essencial para garantir a nitidez dos limites dos objetos e para facilitar a identificação do indivíduo monitorado.
+</p>
+
+<p style="text-align: justify; line-height: 1.5; text-indent: 2em;">
+Com as bordas realçadas, o sistema parte para a detecção do indivíduo, extraindo informações específicas relacionadas à silhueta e à postura corporal. Essa análise é feita por meio de métodos de extração de características visuais, como o <strong>descritor SIFT (Scale Invariant Feature Transform)</strong>, que permite identificar pontos-chave da imagem independentemente de <strong>escala, rotação ou variações de intensidade luminosa</strong>. Tais características são cruciais para a robustez do sistema diante de alterações na posição da câmera ou na iluminação do ambiente.
+</p>
+
+<div style="display: flex; justify-content: center; gap: 10px;">
+  <figure style="text-align: center;">
+    <img src="idoso1.png" alt="Figura 1 - Captura do idoso" width="400" height="600">
+    <figcaption>Figura 1 - Captura do indivíduo.</figcaption>
+  </figure>
+
+  <figure style="text-align: center;">
+    <img src="idoso1_contorno.png" alt="Figura 2 - Detecção do contorno" width="400" height="600">
+    <figcaption>Figura 2 - Detecção do contorno do indivíduo.</figcaption>
+  </figure>
+</div>
+
+<p style="text-align: justify; line-height: 1.5; text-indent: 2em;">
+Na etapa seguinte, ocorre a comparação com imagens modelo, que consistem em representações prévias do indivíduo monitorado em diferentes posições — sentado, deitado e em pé. Essas imagens modelo são utilizadas como referência para o processo de matching. Para garantir uma correspondência precisa entre o quadro atual e os modelos, o sistema pode aplicar transformações geométricas, como rotações, mudanças de escala e ajustes de brilho, assegurando que variações naturais na cena não comprometam a identificação correta da postura.
+</p>
+
+<p style="text-align: justify; line-height: 1.5; text-indent: 2em;">
+Por fim, com base nas correspondências extraídas entre os pontos-chave da imagem atual e os modelos, o sistema gera um resultado indicando a posição mais provável do indivíduo naquele momento. Essa inferência permite acionar, quando necessário, notificações automatizadas ao cuidador responsável, assegurando uma resposta rápida em situações de risco, como quando o indivíduo tenta se levantar ou abandonar a cama sem supervisão. O uso dessa abordagem integrada, baseada em técnicas de processamento de imagem e reconhecimento de padrões, proporciona uma solução robusta e eficaz para o monitoramento contínuo de pessoas incapazes. As imagens apresentadas a seguir possuem caráter ilustrativo, mas representam de forma adequada o resultado esperado durante o processo de detecção da postura do indivíduo. A partir da identificação do contorno, torna-se possível realizar a comparação com imagens modelo previamente definidas.
+</p>
+
+
+<div style="display: flex; justify-content: center; gap: 10px;">
+  <figure style="text-align: center;">
+    <img src="idoso2.png" alt="Figura 3 - Captura do individuo" width="400" height="600">
+    <figcaption>Figura 3 - Captura do indivíduo 2.</figcaption>
+  </figure>
+
+  <figure style="text-align: center;">
+    <img src="idoso2_contorno.png" alt="Figura 1 - Captura do idoso" width="400" height="600">
+    <figcaption>Figura 4 - Detecção do contorno do indivíduo 2.</figcaption>
+  </figure>
+  </div>
+
+<h2 id="conclusao">Conclusão</h2>
+
+<p style="text-align: justify; line-height: 1.5; text-indent: 2em;">
+A modelagem funcional apresentada permite a compreensão clara dos fluxos de dados e das responsabilidades atribuídas a cada módulo do sistema. Essa estrutura orienta o desenvolvimento dos algoritmos de visão computacional, a integração com o sistema de notificação e a interface com o usuário, assegurando que o produto final esteja alinhado às necessidades reais do público-alvo. As técnicas propostas para o desenvolvimento do projeto baseiam-se nos conceitos teóricos abordados em aula até o momento, sendo que a inclusão ou exclusão de novos recursos poderá ocorrer de acordo com a evolução do conteúdo ao longo do curso.
+</p>
