@@ -1,0 +1,48 @@
+<h1 id="monitoramento-de-posi-o-com-envio-de-mensagem-no-telegram">Monitoramento de Posição com Envio de Mensagem no Telegram</h1>
+<p>Este projeto, localizado em <code>OsObservadores.github.io/Teste projeto/</code>, usa OpenCV e MediaPipe para detectar a posição de uma pessoa em frente à webcam. Quando a pessoa fica &quot;em pé&quot; por 5 segundos ou ninguém está detectado por 5 segundos, uma mensagem é enviada via Telegram.</p>
+<h2 id="requisitos">Requisitos</h2>
+<ul>
+<li>Python 3.7+</li>
+<li>Webcam conectada</li>
+<li>Bot do Telegram criado com token e chat ID configurados</li>
+<li>Um tabuleiro em uma folha A4 de 7x9 quadrados, para calibração da câmera</li>
+</ul>
+<h2 id="como-usar">Como usar</h2>
+<ol>
+<li>Navegue até o diretório do projeto:</li>
+</ol>
+<pre><code class="lang-bash"><span class="hljs-built_in">cd</span> <span class="hljs-string">"OsObservadores.github.io/Teste projeto/"</span>
+</code></pre>
+<p>  Crie um arquivo .env na raiz desse diretório com as variáveis:</p>
+<pre><code><span class="hljs-attr">TELEGRAM_TOKEN</span>=seu_token_aqui
+<span class="hljs-attr">TELEGRAM_CHAT_ID</span>=seu_chat_id_aqui
+</code></pre><h2 id="tutorial-para-obter-token-e-chat-id-no-telegram">Tutorial para obter Token e Chat ID no Telegram</h2>
+<p><a href="https://www.youtube.com/watch?v=l5YDtSLGhqk"><img src="https://img.youtube.com/vi/l5YDtSLGhqk/0.jpg" alt="Assistir vídeo explicativo"></a></p>
+<p>  Instale as dependências:</p>
+<pre><code>pip <span class="hljs-keyword">install</span> -r requirements.txt
+</code></pre><h2 id="calibra-o-de-c-mera">Calibração de câmera</h2>
+<p>   Execute o script &quot;capture.py&quot; para tirar fotos do tabuleiro:</p>
+<pre><code><span class="hljs-keyword">python</span> capture.<span class="hljs-keyword">py</span>
+</code></pre><ol>
+<li>Enquanto o script esta rodando, segure o tabuleiro em frente a câmera de forma que todos os quadrados do tabuleiro estejam visiveis na tela e sem reflexo.</li>
+<li>Tire no mínimo 15 fotos do tabuleiro apertando a tecla &quot;s&quot; do teclado, em posições diferentes mas respeitando a regra 1.</li>
+<li><p>Após as 15 fotos, aperte a tecla &quot;q&quot; do teclado para sair</p>
+<p>Com isso, já é possível calibrar a câmera usando um padrão confiavel.</p>
+<p>Para realizar a calibração a partir das fotos, execute o script &quot;calibration.py&quot;</p>
+<pre><code><span class="hljs-keyword">python</span> calibration.<span class="hljs-keyword">py</span>
+</code></pre><p>Agora que a câmera está calibrada, já é possível usar o script principal &quot;posevideo.py&quot;</p>
+<pre><code><span class="hljs-keyword">python</span> posevideo.<span class="hljs-keyword">py</span>
+</code></pre><h2 id="resultados-esperados">Resultados Esperados</h2>
+<p>Notificação no telegram:</p>
+<ul>
+<li>Após 5 segundos com a pessoa filmada ser identificada <strong>estando de pé</strong>.</li>
+<li>Após 5 segundos com a pessoa filmada não ser identificada pela câmera, estando assim <strong>ausente</strong>.<h2 id="observa-es">Observações</h2>
+</li>
+</ul>
+<p>Pressione q para sair da aplicação.</p>
+<p>O chat ID pode ser de um grupo ou conversa individual.</p>
+</li>
+</ol>
+<h2 id="licen-a">Licença</h2>
+<p>Este projeto é open source.</p>
+
